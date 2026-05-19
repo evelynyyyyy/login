@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>login</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <section class="loading-screen active" id="loadingScreen">
+      <img class="opening-art" src="assets/opening.jpg" alt="开屏插画" />
+      <div class="loading-copy">
+        <p>Loading memories...</p>
+        <div class="progress"><span id="progressBar"></span></div>
+        <strong id="percent">0%</strong>
+      </div>
+    </section>
+
+    <main class="world-page" id="worldPage">
+      <canvas id="snowCanvas" aria-hidden="true"></canvas>
+      <div id="earthMount"></div>
+      <div class="country-tooltip" id="countryTooltip"></div>
+      <button class="mailbox-button" id="mailboxButton" type="button" title="打开手账本">
+        <img src="assets/mailbox.png" alt="记忆信箱" />
+        <span id="unreadCount">0</span>
+      </button>
+      <div class="earth-hint">点击地球添加记忆，拖动地球旋转</div>
+    </main>
+
+    <dialog id="memoryDialog">
+      <form id="memoryForm" class="postcard-form" method="dialog">
+        <div class="dialog-head">
+          <h3 id="memoryDialogTitle">写一张明信片</h3>
+          <button type="button" id="closeDialog" aria-label="关闭">×</button>
+        </div>
+
+        <div class="postcard">
+          <section class="postcard-left">
+            <label class="photo-slot">
+              <span>添加照片</span>
+              <input id="photoInput" type="file" accept="image/*" />
+            </label>
+            <label>
+              文字记录
+              <textarea id="noteInput" rows="7" placeholder="把这一刻写成寄给未来的明信片"></textarea>
+            </label>
+          </section>
+
+          <section class="postcard-right">
+            <div class="stamp" id="stamp">
+              <img id="stampImage" alt="邮票图案" />
+            </div>
+            <label>
+              地点名称
+              <input id="placeInput" type="text" placeholder="点击地球后自动识别" readonly required />
+            </label>
+            <label>
+              日期
+              <input id="dateInput" type="date" />
+            </label>
+            <label>
+              类型
+              <select id="typeInput">
+                <option value="want">想去（金色）</option>
+                <option value="done">意愿已（蓝色）</option>
+                <option value="dream">梦想清单（粉色）</option>
+              </select>
+            </label>
+          </section>
+        </div>
+
+        <button type="submit" id="saveMemoryButton">寄出</button>
+      </form>
+    </dialog>
+
+    <dialog id="bookDialog" class="book-dialog">
+      <div class="book-toolbar">
+        <button id="prevPage" type="button">上一页</button>
+        <span id="pageText">封面</span>
+        <button id="nextPage" type="button">下一页</button>
+        <button id="editPage" type="button">修改当前页</button>
+        <button id="deletePage" type="button">删除当前页</button>
+        <button id="clearMemories" type="button">清空记忆</button>
+        <button id="closeBook" type="button" aria-label="关闭">×</button>
+      </div>
+      <div class="book" id="book"></div>
+    </dialog>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
