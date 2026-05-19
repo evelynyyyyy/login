@@ -62,6 +62,7 @@ let camera;
 let renderer;
 let earth;
 let controls;
+let responsiveCameraMode = "";
 let markerGroup;
 let starGroup;
 let borderGroup;
@@ -131,10 +132,36 @@ function syncViewportSize() {
   document.documentElement.style.setProperty("--app-height", `${getViewportHeight()}px`);
 }
 
+function getViewportMode() {
+  if (window.innerWidth <= 480) return "phone";
+  if (window.innerWidth <= 768) return "compact";
+  return "desktop";
+}
+
+function getEarthCameraDistance() {
+  const mode = getViewportMode();
+  if (mode === "phone") return 6.1;
+  if (mode === "compact") return 5.35;
+  return 4.2;
+}
+
+function syncResponsiveCamera(force = false) {
+  if (!camera) return;
+  const mode = getViewportMode();
+  if (!force && mode === responsiveCameraMode) return;
+  responsiveCameraMode = mode;
+  camera.position.set(0, mode === "desktop" ? 0.1 : 0.04, getEarthCameraDistance());
+  camera.updateProjectionMatrix();
+  if (!controls) return;
+  controls.minDistance = mode === "phone" ? 4.6 : mode === "compact" ? 3.8 : 2.8;
+  controls.maxDistance = mode === "desktop" ? 6 : 7.5;
+  controls.update();
+}
+
 function initEarth() {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / getViewportHeight(), 0.1, 100);
-  camera.position.set(0, 0.1, 4.2);
+  camera.position.set(0, 0.1, getEarthCameraDistance());
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -146,6 +173,7 @@ function initEarth() {
   controls.enablePan = false;
   controls.minDistance = 2.8;
   controls.maxDistance = 6;
+  syncResponsiveCamera(true);
 
   scene.add(new THREE.AmbientLight(0xffffff, 1.7));
   const sun = new THREE.DirectionalLight(0xffffff, 2.1);
@@ -651,7 +679,7 @@ function flyEnvelope(memory) {
   const world = earth.localToWorld(start);
   const screen = world.project(camera);
   const fromX = (screen.x * 0.5 + 0.5) * window.innerWidth;
-  const fromY = (-screen.y * 0.5 + 0.5) * window.innerHeight;
+  const fromY = (-screen.y * 0.5 + 0.5) * getViewportHeight();
   const mailboxRect = mailboxButton.getBoundingClientRect();
   const toX = mailboxRect.left + mailboxRect.width / 2;
   const toY = mailboxRect.top + mailboxRect.height / 2;
@@ -676,12 +704,13 @@ function escapeHtml(value = "") {
 
 function resizeSnow() {
   const dpr = window.devicePixelRatio || 1;
+  const viewportHeight = getViewportHeight();
   snowCanvas.width = window.innerWidth * dpr;
-  snowCanvas.height = window.innerHeight * dpr;
+  snowCanvas.height = viewportHeight * dpr;
   snowCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   snowflakes = Array.from({ length: Math.max(70, Math.floor(window.innerWidth / 12)) }, () => ({
     x: Math.random() * window.innerWidth,
-    y: Math.random() * window.innerHeight,
+    y: Math.random() * viewportHeight,
     size: Math.random() * 3 + 1,
     speed: Math.random() * 0.8 + 0.15,
     drift: Math.random() * 0.6 - 0.3
@@ -689,13 +718,14 @@ function resizeSnow() {
 }
 
 function drawSnow() {
-  snowCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  const viewportHeight = getViewportHeight();
+  snowCtx.clearRect(0, 0, window.innerWidth, viewportHeight);
   snowCtx.fillStyle = "rgba(255,255,255,0.78)";
   snowflakes.forEach((flake) => {
     snowCtx.fillRect(flake.x, flake.y, flake.size, flake.size);
     flake.y += flake.speed;
     flake.x += flake.drift;
-    if (flake.y > window.innerHeight) {
+    if (flake.y > viewportHeight) {
       flake.y = -8;
       flake.x = Math.random() * window.innerWidth;
     }
@@ -711,6 +741,7 @@ function handleResize() {
   camera.aspect = window.innerWidth / getViewportHeight();
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, getViewportHeight());
+  syncResponsiveCamera();
   resizeSnow();
 }
 
