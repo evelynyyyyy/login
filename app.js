@@ -123,14 +123,22 @@ function toDataUrl(file) {
   });
 }
 
+function getViewportHeight() {
+  return window.visualViewport?.height || window.innerHeight;
+}
+
+function syncViewportSize() {
+  document.documentElement.style.setProperty("--app-height", `${getViewportHeight()}px`);
+}
+
 function initEarth() {
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / getViewportHeight(), 0.1, 100);
   camera.position.set(0, 0.1, 4.2);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(window.innerWidth, getViewportHeight());
   earthMount.appendChild(renderer.domElement);
 
   controls = new OrbitControls(camera, renderer.domElement);
@@ -694,13 +702,22 @@ function drawSnow() {
   });
 }
 
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+function handleResize() {
+  syncViewportSize();
+  if (!camera || !renderer) {
+    resizeSnow();
+    return;
+  }
+  camera.aspect = window.innerWidth / getViewportHeight();
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(window.innerWidth, getViewportHeight());
   resizeSnow();
-});
+}
 
+window.addEventListener("resize", handleResize);
+window.visualViewport?.addEventListener("resize", handleResize);
+
+syncViewportSize();
 resizeSnow();
 initEarth();
 installEarthClickGuard();
